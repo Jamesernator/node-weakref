@@ -6,6 +6,7 @@
   "author": "James \"The Jamesernator\" Browning",
   "license": "ISC",
   "devDependencies": {
+    "ava": "^1.0.1",
     "node-gyp": "^3.8.0"
   },
   "scripts": {

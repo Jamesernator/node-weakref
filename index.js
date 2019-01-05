@@ -1,3 +1,11 @@
-'use strict';
+'use strict'
 
-module.exports = require('./build/Release/weakRef.node')
+module.exports = {
+  get WeakRef() {
+    return require('./WeakRef.js')
+  },
+
+  get FinalizationGroup() {
+    return require('./FinalizationGroup.js')
+  },
+}

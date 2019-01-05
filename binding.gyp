@@ -1,10 +1,10 @@
 {
   "targets": [{
-        "target_name": "weakRef",
+        "target_name": "WeakRef",
         "cflags!": [ "-fno-exceptions" ],
         "cflags_cc!": [ "-fno-exceptions" ],
         "sources": [
-            "weakRef.cpp"
+            "WeakRef.cpp"
         ],
         'include_dirs': [
             "<!@(node -p \"require('node-addon-api').include\")"
@@ -13,6 +13,6 @@
         'dependencies': [
             "<!(node -p \"require('node-addon-api').gyp\")"
         ],
-        'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ]
+        "defines": [ 'NAPI_CPP_EXCEPTIONS' ]
     }]
 }
