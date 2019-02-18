@@ -49,14 +49,6 @@ class CleanupIterator {
   }
 }
 
-function poll(weakRef, holdings, callback, delay) {
-  if (weakRef.deref() === undefined) {
-    callback(holdings)
-  } else {
-    setTimeout(poll, delay, weakRef, holdings, callback, delay)
-  }
-}
-
 async function poll(weakRef, holdings, callback, delay) {
   while (weakRef.deref() !== undefined) {
     await new Promise(resolve => setTimeout(resolve, delay))
@@ -66,6 +58,9 @@ async function poll(weakRef, holdings, callback, delay) {
 
 module.exports = class FinalizationGroup {
   constructor(cleanupCallback, pollDelay=16) {
+    if (typeof cleanupCallback !== 'function') {
+      throw new TypeError("Cleanup callback must be a function")
+    }
     this._cleanupCallback = cleanupCallback
     this._queue = new Queue()
     this._pollDelay = pollDelay
@@ -91,7 +86,7 @@ module.exports = class FinalizationGroup {
     this._beginPoll(weakRef, holdings)
   }
 
-  cleanupSome(cleanupCallback) {
+  cleanupSome(cleanupCallback=this._cleanupCallback) {
     if (this._queue.length) {
       cleanupCallback(new CleanupIterator(this._queue))
     }
