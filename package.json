@@ -1,5 +1,5 @@
 {
-  "name": "@jamesernator/weakref",
+  "name": "@jsxt/weakref",
   "type": "module",
   "version": "1.0.3",
   "description": "A simple WeakRef implementation/polyfill based on N-API",
