@@ -15,8 +15,7 @@
     "useDefineForClassFields": true,
     "importsNotUsedAsValues": "error",
 
-    "checkJs": true,
-    "allowJs": true
+    "checkJs": true
   },
   "include": ["*.js"]
 }

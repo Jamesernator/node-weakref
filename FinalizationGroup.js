@@ -2,18 +2,17 @@ import WeakRef from './WeakRef.js';
 
 /**
  * @template Holdings
- * @param {WeakRef<object>} weakRef 
- * @param {Holdings} holdings 
- * @param {(holdings: Holdings) => void} callback 
- * @param {number} delay 
+ * @param {WeakRef<object>} weakRef  
+ * @param {number} delay
+ * @param {() => void} callback
  * @returns {() => void}
  */
-function poll(weakRef, holdings, callback, delay) {
+function pollWeakRef(weakRef, delay, callback) {
     let timeout = setTimeout(pollOnce, delay);
 
     function pollOnce() {
         if (weakRef.deref()) {
-            return callback(holdings);
+            return callback();
         }
         timeout = setTimeout(pollOnce, delay);
     }
@@ -53,7 +52,26 @@ module.exports = class FinalizationGroup {
      * @param {UnregisterToken} unregisterToken 
      */
     register(value, holdings, unregisterToken) {
-        
+        const weakRef = new WeakRef(value);
+        const cancelPoll = pollWeakRef(weakRef, this.#pollDelay, () => {
+            this.#cleanupCallback(holdings);
+            if (unregisterToken) {
+                // @ts-ignore
+                this.#cancelPolls.delete(unregisterToken);
+            }
+        })
+        if (unregisterToken) {
+            // @ts-ignore
+            this.#cancelPolls.set(unregisterToken, cancelPoll);
+        }
+    }
+
+    /**
+     * 
+     * @param {NonNullable<UnregisterToken>} unregisterToken 
+     */
+    unregister(unregisterToken) {
+        this.#cancelPolls.delete(unregisterToken);
     }
 
     /**
