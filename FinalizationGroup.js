@@ -1,94 +1,66 @@
-'use strict'
-const WeakRef = require('./WeakRef.js')
+import WeakRef from './WeakRef.js';
 
-function queueMicrotask(func) {
-  Promise.resolve().then(function() {
-    func()
-  })
-}
+/**
+ * @template Holdings
+ * @param {WeakRef<object>} weakRef 
+ * @param {Holdings} holdings 
+ * @param {(holdings: Holdings) => void} callback 
+ * @param {number} delay 
+ * @returns {() => void}
+ */
+function poll(weakRef, holdings, callback, delay) {
+    let timeout = setTimeout(pollOnce, delay);
 
-
-class Queue {
-  constructor() {
-    this._queue = new Set()
-  }
-
-  get length() {
-    return this._queue.size
-  }
-
-  enqueue(value) {
-    this._queue.add({ value })
-  }
-
-  dequeue() {
-    if (this._queue.size === 0) {
-      throw new Error("Can't dequeue from empty queue")
+    function pollOnce() {
+        if (weakRef.deref()) {
+            return callback(holdings);
+        }
+        timeout = setTimeout(pollOnce, delay);
     }
-    const [first] = this._queue
-    this._queue.delete(first)
-    return first.value
-  }
+
+    return () => clearTimeout(timeout);
 }
 
-class CleanupIterator {
-  constructor(queue) {
-    this._queue = queue
-  }
-
-  next() {
-    if (this._queue.length === 0) {
-      return { done: true, value: undefined }
-    } else {
-      return { done: false, value: this._queue.dequeue() }
-    }
-  }
-
-  [Symbol.iterator]() {
-    return this
-  }
-}
-
-async function poll(weakRef, holdings, callback, delay) {
-  while (weakRef.deref() !== undefined) {
-    await new Promise(resolve => setTimeout(resolve, delay))
-  }
-  callback(holdings)
-}
-
+/**
+ * @template {object} T
+ * @template Holdings
+ * @template {object | undefined} UnregisterToken
+ */
 module.exports = class FinalizationGroup {
-  constructor(cleanupCallback, pollDelay=16) {
-    if (typeof cleanupCallback !== 'function') {
-      throw new TypeError("Cleanup callback must be a function")
+    /** @type {(holdings: Holdings) => void} */
+    #cleanupCallback;
+    /** @type {number} */
+    #pollDelay;
+    /** @type {Map<NonNullable<UnregisterToken>, () => void>} */
+    #cancelPolls = new Map();
+
+    /**
+     * @param {(holdings: Holdings) => void} cleanupCallback
+     * @param {number} pollDelay
+     */
+    constructor(cleanupCallback, pollDelay=16) {
+        if (typeof cleanupCallback !== 'function') {
+            throw new TypeError("Cleanup callback must be a function")
+        }
+        this.#cleanupCallback = cleanupCallback;
+        this.#pollDelay = pollDelay;
     }
-    this._cleanupCallback = cleanupCallback
-    this._queue = new Queue()
-    this._pollDelay = pollDelay
-  }
 
-  _triggerCleanup(holdings) {
-    this._queue.enqueue(holdings)
-    
-    queueMicrotask(() => {
-      this._cleanupCallback(new CleanupIterator(this._queue))
-    })
-  }
-
-  _beginPoll(weakRef, holdings) {
-    queueMicrotask(() => {
-      poll(weakRef, holdings, () => this._triggerCleanup(holdings), this._pollDelay)
-    })
-  }
-
-  register(value, holdings) {
-    const weakRef = new WeakRef(value)
-
-    this._beginPoll(weakRef, holdings)
-  }
-
-  cleanupSome(cleanupCallback=this._cleanupCallback) {
-    if (this._queue.length) {
-      cleanupCallback(new CleanupIterator(this._queue))
+    /**
+     * 
+     * @param {T} value
+     * @param {Holdings} holdings
+     * @param {UnregisterToken} unregisterToken 
+     */
+    register(value, holdings, unregisterToken) {
+        
     }
-  }
+
+    /**
+     * @param {(holdings: Holdings) => void} cleanupCallback
+     */
+    cleanupSome(cleanupCallback) {
+        // This implementation doesn't batch callbacks so cleanupSome does
+        // nothing
+    }
 }
