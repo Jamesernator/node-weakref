@@ -1,8 +1,8 @@
 {
   "targets": [{
         "target_name": "WeakRef",
-        "cflags!": [ "-fno-exceptions" ],
-        "cflags_cc!": [ "-no-fexceptions" ],
+        "cflags!": [ "-fexceptions" ],
+        "cflags_cc!": [ "-fexceptions" ],
         "sources": [
             "WeakRef.cpp"
         ],

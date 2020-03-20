@@ -1,15 +1,18 @@
 {
   "name": "@jamesernator/weakref",
+  "type": "module",
   "version": "1.0.2",
   "description": "A simple WeakRef implementation/polyfill based on N-API",
   "main": "index.js",
   "author": "James \"The Jamesernator\" Browning",
   "license": "ISC",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.24.0",
     "ava": "^1.0.1",
-    "node-gyp": "^6.0.0"
+    "node-gyp": "^6.1.0"
   },
   "scripts": {
+    "lint": "eslint *.ts",
     "build": "node-gyp rebuild",
     "clean": "node-gyp clean",
     "test": "npx --node-arg=\"--expose-gc\" ava"
